@@ -176,14 +176,6 @@ Polymer({
     },
 
     /**
-     * When true, the poly may be dragged to a new position.
-     */
-    draggable: {
-      type: Boolean,
-      value: false,
-    },
-
-    /**
      * When true, the google-map-poly-drag* events will be automatically registered.
      */
     dragEvents: {
