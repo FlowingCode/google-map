@@ -821,12 +821,14 @@ Polymer({
   _deselectMarker(e, detail) {
     // If singleInfoWindow is set, update iron-selector's selected attribute to be null.
     // Else remove the marker from iron-selector's selected array.
-    const markerIndex = this.$.selector.indexOf(e.target);
+	if (this.$.selector.indexOf) {
+		const markerIndex = this.$.selector.indexOf(e.target);
 
-    if (this.singleInfoWindow) {
-      this.$.selector.selected = null;
-    } else if (this.$.selector.selectedValues) {
-      this.$.selector.selectedValues = this.$.selector.selectedValues.filter(i => i !== markerIndex);
-    }
+		if (this.singleInfoWindow) {
+		  this.$.selector.selected = null;
+		} else if (this.$.selector.selectedValues) {
+		  this.$.selector.selectedValues = this.$.selector.selectedValues.filter(i => i !== markerIndex);
+		}
+	}
   },
 });

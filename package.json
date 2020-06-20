@@ -1,7 +1,7 @@
 {
-  "name": "@johnriv/google-map",
+  "name": "@flowingcode/google-map",
   "flat": true,
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Google Maps web components",
   "contributors": [
     "Frankie Fu <ffu@google.com>",
