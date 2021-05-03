@@ -418,7 +418,7 @@ Polymer({
   },
 
   _clearListener(name) {
-    if (this._listeners[name]) {
+    if (this._listeners && this._listeners[name]) {
       google.maps.event.removeListener(this._listeners[name]);
       this._listeners[name] = null;
     }
