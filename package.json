@@ -3,6 +3,11 @@
   "flat": true,
   "version": "3.0.2",
   "description": "Google Maps web components",
+  "main": "google-map.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlowingCode/google-map.git"
+  },
   "contributors": [
     "Frankie Fu <ffu@google.com>",
     "Scott Miles <sjmiles@google.com>",
