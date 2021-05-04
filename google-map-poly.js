@@ -302,7 +302,9 @@ Polymer({
   // Lifecycle event handlers.
 
   detached() {
-    this.poly.setMap(null);
+    if(this.poly) {
+      this.poly.setMap(null);
+    }
     if (this._pointsObserver) {
       this._pointsObserver.disconnect();
       this._pointsObserver = null;
