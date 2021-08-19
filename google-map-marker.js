@@ -283,7 +283,7 @@ Polymer({
   },
 
   _dragEventsChanged() {
-    if (this.map) {
+    if (this.marker) {
       if (this.dragEvents) {
         this._forwardEvent('drag');
         this._forwardEvent('dragend');
