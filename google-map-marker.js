@@ -269,7 +269,7 @@ Polymer({
   },
 
   _clickEventsChanged() {
-    if (this.map) {
+    if (this.marker) {
       if (this.clickEvents) {
         this._forwardEvent('click');
         this._forwardEvent('dblclick');
