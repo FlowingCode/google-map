@@ -297,7 +297,7 @@ Polymer({
   },
 
   _mouseEventsChanged() {
-    if (this.map) {
+    if (this.marker) {
       if (this.mouseEvents) {
         this._forwardEvent('mousedown');
         this._forwardEvent('mousemove');
