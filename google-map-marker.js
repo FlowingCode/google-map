@@ -248,7 +248,6 @@ Polymer({
 
   detached() {
     if (this.marker) {
-      google.maps.event.clearInstanceListeners(this.marker);
       this._listeners = {};
       this.marker.setMap(null);
     }
