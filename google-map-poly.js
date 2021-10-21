@@ -303,15 +303,13 @@ Polymer({
 
   detached() {
     if(this.poly) {
+      this._listeners = {};
       this.poly.setMap(null);
     }
     if (this._pointsObserver) {
       this._pointsObserver.disconnect();
       this._pointsObserver = null;
-    }
-    for (const name in this._listeners) {
-      this._clearListener(name);
-    }
+    } 
   },
 
   attached() {
