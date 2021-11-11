@@ -291,6 +291,15 @@ Polymer({
     },
 
     /**
+     * If set, removes the map's 'rotate' UI controls.
+     */
+     disableRotateControl: {
+      type: Boolean,
+      value: false,
+      observer: '_disableRotateControlChanged',
+    },
+
+    /**
      * If set, the zoom level is set such that all markers (google-map-marker children) are brought into view.
      */
     fitToMarkers: {
@@ -483,6 +492,7 @@ Polymer({
       disableDefaultUI: this.disableDefaultUi,
       mapTypeControl: !this.disableDefaultUi && !this.disableMapTypeControl,
       streetViewControl: !this.disableDefaultUi && !this.disableStreetViewControl,
+      rotateControl: !this.disableDefaultUi && !this.disableRotateControl,
       disableDoubleClickZoom: this.disableZoom,
       scrollwheel: !this.disableZoom,
       styles: this.styles,
@@ -742,6 +752,13 @@ Polymer({
       return;
     }
     this.map.setOptions({ streetViewControl: !this.disableStreetViewControl });
+  },
+
+  _disableRotateControlChanged() {
+    if (!this.map) {
+      return;
+    }
+    this.map.setOptions({ rotateControl: !this.disableRotateControl });
   },
 
   _disableZoomChanged() {
