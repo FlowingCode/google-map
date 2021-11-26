@@ -300,6 +300,33 @@ Polymer({
     },
 
     /**
+     * If set, removes the map's 'full screen' UI controls.
+     */
+     disableFullScreenControl: {
+      type: Boolean,
+      value: false,
+      observer: '_disableFullScreenControlChanged',
+    },
+
+    /**
+     * If set, removes the map's 'zoom' UI controls.
+     */
+    disableZoomControl: {
+      type: Boolean,
+      value: false,
+      observer: '_disableZoomControlChanged',
+    },
+
+    /**
+     * If set, removes the map's 'scale' UI controls.
+     */
+    disableScaleControl: {
+      type: Boolean,
+      value: false,
+      observer: '_disableScaleControlChanged',
+    },
+
+    /**
      * If set, the zoom level is set such that all markers (google-map-marker children) are brought into view.
      */
     fitToMarkers: {
@@ -493,6 +520,9 @@ Polymer({
       mapTypeControl: !this.disableDefaultUi && !this.disableMapTypeControl,
       streetViewControl: !this.disableDefaultUi && !this.disableStreetViewControl,
       rotateControl: !this.disableDefaultUi && !this.disableRotateControl,
+      fullscreenControl: !this.disableDefaultUi && !this.disableFullScreenControl,
+      zoomControl: !this.disableDefaultUi && !this.disableZoomControl,
+      scaleControl: !this.disableDefaultUi && !this.disableScaleControl,
       disableDoubleClickZoom: this.disableZoom,
       scrollwheel: !this.disableZoom,
       styles: this.styles,
@@ -761,6 +791,27 @@ Polymer({
     this.map.setOptions({ rotateControl: !this.disableRotateControl });
   },
 
+  _disableFullScreenControlChanged() {
+    if (!this.map) {
+      return;
+    }
+    this.map.setOptions({ fullscreenControl: !this.disableFullScreenControl });
+  },
+  
+  _disableZoomControlChanged() {
+    if (!this.map) {
+      return;
+    }
+    this.map.setOptions({ zoomControl: !this.disableZoomControl });
+  },
+
+  _disableScaleControlChanged() {
+    if (!this.map) {
+      return;
+    }
+    this.map.setOptions({ scaleControl: !this.disableScaleControl });
+  },
+  	
   _disableZoomChanged() {
     if (!this.map) {
       return;
