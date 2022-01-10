@@ -567,28 +567,30 @@ Polymer({
   },
 
   _updateMarkers() {
-    const newMarkers = Array.prototype.slice.call(this.$.markers.assignedNodes({ flatten: true }));
+    if(this.map) {
+      const newMarkers = Array.prototype.slice.call(this.$.markers.assignedNodes({ flatten: true }));
 
-    // do not recompute if markers have not been added or removed
-    if (newMarkers.length === this.markers.length) {
-      const added = newMarkers.filter(m => this.markers && this.markers.indexOf(m) === -1);
-      if (added.length === 0) {
-        // set up observer first time around
-        if (!this._markersChildrenListener) {
-          this._observeMarkers();
+      // do not recompute if markers have not been added or removed
+      if (newMarkers.length === this.markers.length) {
+        const added = newMarkers.filter(m => this.markers && this.markers.indexOf(m) === -1);
+        if (added.length === 0) {
+          // set up observer first time around
+          if (!this._markersChildrenListener) {
+            this._observeMarkers();
+          }
+          return;
         }
-        return;
       }
-    }
 
-    this._observeMarkers();
+      this._observeMarkers();
 
-    this.markers = this._setMarkers(newMarkers);
+      this.markers = this._setMarkers(newMarkers);
 
-    // Set the map on each marker and zoom viewport to ensure they're in view.
-    this._attachChildrenToMap(this.markers);
-    if (this.fitToMarkers) {
-      this._fitToMarkersChanged();
+      // Set the map on each marker and zoom viewport to ensure they're in view.
+      this._attachChildrenToMap(this.markers);
+      if (this.fitToMarkers) {
+        this._fitToMarkersChanged();
+      }
     }
   },
 
