@@ -457,6 +457,14 @@ Polymer({
       type: Boolean,
       value: false,
     },
+
+    /**
+     * If set, the custom style associated with that Map ID is applied.
+     * see https://developers.google.com/maps/documentation/javascript/reference/map?hl=en#MapOptions.mapId
+     */
+    mapId: {
+      type: String,
+    },
   },
 
   listeners: {
@@ -528,6 +536,7 @@ Polymer({
       styles: this.styles,
       maxZoom: Number(this.maxZoom),
       minZoom: Number(this.minZoom),
+      mapId: this.mapId,
     };
 
     // Only override the default if set.
