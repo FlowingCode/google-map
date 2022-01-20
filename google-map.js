@@ -465,6 +465,16 @@ Polymer({
     mapId: {
       type: String,
     },
+
+    /**
+     * Size in pixels of the controls appearing on the map. 
+     * If set, control's size will be updated with this value, if not, default value will be used. 
+     * Must be specified when creating the map.
+     * See https://developers.google.com/maps/documentation/javascript/reference/map#MapOptions.controlSize
+     */
+    controlSize: {
+      type: Number,
+    },
   },
 
   listeners: {
@@ -537,6 +547,7 @@ Polymer({
       maxZoom: Number(this.maxZoom),
       minZoom: Number(this.minZoom),
       mapId: this.mapId,
+      controlSize: this.controlSize,
     };
 
     // Only override the default if set.
