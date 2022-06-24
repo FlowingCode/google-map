@@ -3,6 +3,7 @@ import { html } from '../../@polymer/polymer/lib/utils/html-tag.js';
 import { IronResizableBehavior } from '../../@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import './google-map-marker.js';
 import '../../@johnriv/google-apis/google-maps-api.js';
+import { MarkerClusterer } from "@googlemaps/markerclusterer";
 
 /* Copyright (c) 2015 Google Inc. All rights reserved. */
 /**
@@ -475,6 +476,23 @@ Polymer({
     controlSize: {
       type: Number,
     },
+
+    /**
+     * If set to true, markers will be shown as clusters.
+     */
+    enableMarkersClustering: {
+      type: Boolean,
+      value: false,
+    },
+
+    /**
+     * Markers cluster.
+     * See https://developers.google.com/maps/documentation/javascript/marker-clustering 
+     */
+    markerCluster: {
+      type: Object,
+      value: null
+    }
   },
 
   listeners: {
@@ -520,6 +538,7 @@ Polymer({
     this._updateCenter();
     this._loadKml();
     this._updateMarkers();
+    this._loadMarkersCluster();
     this._updateObjects();
     this._addMapListeners();
     this.fire('google-map-ready');
@@ -547,7 +566,8 @@ Polymer({
       maxZoom: Number(this.maxZoom),
       minZoom: Number(this.minZoom),
       mapId: this.mapId,
-      controlSize: this.controlSize,
+      controlSize: this.controlSize,      
+      enableMarkersClustering: this.enableMarkersClustering,
     };
 
     // Only override the default if set.
@@ -842,6 +862,15 @@ Polymer({
       disableDoubleClickZoom: this.disableZoom,
       scrollwheel: !this.disableZoom,
     });
+  },
+
+  _loadMarkersCluster() {
+    if(this.map && this.enableMarkersClustering) {
+      this.markerCluster = new MarkerClusterer({ 
+          map: this.map, 
+          markers: this.markers 
+      });
+    }
   },
 
   attributeChanged(attrName) {

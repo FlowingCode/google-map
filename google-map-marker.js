@@ -249,7 +249,7 @@ Polymer({
   detached() {
     if (this.marker) {
       this._listeners = {};
-      this.marker.setMap(null);
+      this.setMap(null);
     }
     if (this._contentObserver) { this._contentObserver.disconnect(); }
   },
@@ -257,7 +257,7 @@ Polymer({
   attached() {
     // If element is added back to DOM, put it back on the map.
     if (this.marker) {
-      this.marker.setMap(this.map);
+      this.setMap(this.map);
     }
   },
 
@@ -340,7 +340,7 @@ Polymer({
   _mapChanged() {
     // Marker will be rebuilt, so disconnect existing one from old map and listeners.
     if (this.marker) {
-      this.marker.setMap(null);
+      this.setMap(null);
       google.maps.event.clearInstanceListeners(this.marker);
     }
 
@@ -448,4 +448,18 @@ Polymer({
         break;
     }
   },
+
+  /* Override getPosition, setMap, getVisible to allow marker's clustering */
+  getPosition() {
+    return new google.maps.LatLng(parseFloat(this.latitude), parseFloat(this.longitude));
+  },
+
+  setMap(map) {
+    this.marker.setMap(map);
+  },
+
+  getVisible() {
+    return this.marker.getVisible();
+  },
+
 });
