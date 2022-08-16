@@ -75,6 +75,10 @@ Polymer({
         bottom: 0;
         left: 0;
       }
+
+      #map div[role="dialog"] button[class="gm-ui-hover-effect"] span {
+        background-color: #000;
+      }
     </style>
 
     <google-maps-api id="api" api-key="[[apiKey]]" client-id="[[clientId]]" version="[[version]]" signed-in="[[signedIn]]" language="[[language]]" on-api-load="_mapApiLoaded" maps-url="[[mapsUrl]]">
