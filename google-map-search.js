@@ -1,4 +1,4 @@
-import { Polymer } from '../../@polymer/polymer/lib/legacy/polymer-fn.js';
+import { Polymer } from '@polymer/polymer/lib/legacy/polymer-fn.js';
 /* Copyright (c) 2015 Google Inc. All rights reserved. */
 /*
 `google-map-search` provides Google Maps Places API functionality.
