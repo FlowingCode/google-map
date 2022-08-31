@@ -1,4 +1,4 @@
-import { Polymer } from '../../@polymer/polymer/lib/legacy/polymer-fn.js';
+import { Polymer } from '@polymer/polymer/lib/legacy/polymer-fn.js';
 /* Copyright (c) 2015 Google Inc. All rights reserved. */
 /*
 The `google-map-point` element represents a point on a map. It's used as a child of other
