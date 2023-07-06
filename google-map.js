@@ -526,6 +526,23 @@ Polymer({
     IronResizableBehavior,
   ],
 
+  _skipRobotoLoading() {
+		var head = document.getElementsByTagName('head')[0];
+
+		// Save the original method
+		var insertBefore = head.insertBefore;
+
+		// Replace it
+		head.insertBefore = function(newElement, referenceElement) {
+
+			if (newElement.href && newElement.href.indexOf('//fonts.googleapis.com/css?family=Roboto') > -1) {
+				// Prevented Roboto from loading
+				return;
+			}
+			insertBefore.call(head, newElement, referenceElement);
+		};
+	},
+
   _initGMap() {
     if (this.map) {
       return; // already initialized
@@ -537,6 +554,7 @@ Polymer({
       return; // not attached
     }
 
+    this._skipRobotoLoading();
     this.map = new google.maps.Map(this.$.map, this._getMapOptions());
     this._listeners = {};
     this._updateCenter();
