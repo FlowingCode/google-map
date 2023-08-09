@@ -251,6 +251,28 @@ Polymer({
     },
 
     /**
+     * Tilt value to set to the (vector) map if supported.   
+     * See https://developers.google.com/maps/documentation/javascript/webgl/tilt-rotation
+     */
+    tilt: {
+      type: Number,
+      value: 45,
+      observer: '_tiltChanged',
+      notify: true,
+    },
+    
+    /**
+     * Heading(rotation) value to set to the (vector) map if supported.  
+     * See https://developers.google.com/maps/documentation/javascript/webgl/tilt-rotation 
+     */
+    heading: {
+      type: Number,
+      value: 0,
+      observer: '_headingChanged',
+      notify: true,
+    },
+
+    /**
      * Map type to display. One of 'roadmap', 'satellite', 'hybrid', 'terrain'.
      */
     mapType: {
@@ -573,7 +595,8 @@ Polymer({
   _getMapOptions() {
     const mapOptions = {
       zoom: this.zoom,
-      tilt: this.noAutoTilt ? 0 : 45,
+      tilt: this.noAutoTilt ? 0 : this.tilt,
+      heading: this.heading,
       mapTypeId: this.mapType,
       disableDefaultUI: this.disableDefaultUi,
       mapTypeControl: !this.disableDefaultUi && !this.disableMapTypeControl,
@@ -759,6 +782,18 @@ Polymer({
     }
   },
 
+  _tiltChanged() {
+  	if (this.map) {
+      this.map.setTilt(Number(this.tilt));
+    }
+  },
+  
+  _headingChanged() {
+    if (this.map) {
+      this.map.setHeading(Number(this.heading));
+    }
+  },
+
   _idleEvent() {
     if (this.map) {
       this._forwardEvent('idle');
@@ -938,6 +973,14 @@ Polymer({
 
     google.maps.event.addListener(this.map, 'maptypeid_changed', () => {
       this.mapType = this.map.getMapTypeId();
+    });
+
+    google.maps.event.addListener(this.map, 'tilt_changed', () => {
+      this.tilt = this.map.getTilt();
+    });
+    
+    google.maps.event.addListener(this.map, 'heading_changed', () => {
+      this.heading = this.map.getHeading();
     });
 
     this._clickEventsChanged();
