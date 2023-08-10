@@ -240,6 +240,17 @@ Polymer({
       value: false,
       observer: '_openChanged',
     },
+
+    /**
+     * Enables/disables marker optimization. If enabled, many markers are rendered 
+     * as a single static element. 
+     * See https://developers.google.com/maps/documentation/javascript/markers?hl=en#optimize
+     */
+    optimized: {
+      type: Boolean,
+      value: false,
+      notify: true,
+    }
   },
 
   observers: [
@@ -407,6 +418,7 @@ Polymer({
       icon: this.icon,
       label: this.label,
       zIndex: this.zIndex,
+      optimized: this.optimized,
     });
     this._contentChanged();
     this._clickEventsChanged();
