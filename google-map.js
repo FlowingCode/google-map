@@ -518,6 +518,14 @@ Polymer({
     markerCluster: {
       type: Object,
       value: null
+    },
+
+    /**
+     * Custom renderer definition for markers clustering.
+     */
+    customRenderer: {
+      type: Object,
+      value: null
     }
   },
 
@@ -922,11 +930,15 @@ Polymer({
   },
 
   _loadMarkersCluster() {
-    if(this.map && this.enableMarkersClustering) {
-      this.markerCluster = new MarkerClusterer({ 
-          map: this.map, 
-          markers: this.markers 
-      });
+    if(this.map && this.enableMarkersClustering) {		
+      let options = {
+        map: this.map,
+        markers: this.markers
+      };
+      if (typeof this.customRenderer === 'string') {
+        options.renderer = eval(this.customRenderer);
+      }
+      this.markerCluster = new MarkerClusterer(options); 
     }
   },
 
