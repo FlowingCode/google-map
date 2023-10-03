@@ -172,6 +172,12 @@ Polymer({
    */
 
   /**
+   * Fired when the viewport lat/lng bounds change. 
+   *
+   * @event google-map-bounds_changed
+   */
+
+  /**
    * Polymer properties for the google-map custom element.
    */
   properties: {
@@ -999,6 +1005,10 @@ Polymer({
     this._dragEventsChanged();
     this._mouseEventsChanged();
     this._idleEvent();
+
+    google.maps.event.addListener(this.map, 'bounds_changed', () => {
+      this.fire('google-map-bounds_changed', this.map.getBounds());
+    });
   },
 
   _clearListener(name) {
