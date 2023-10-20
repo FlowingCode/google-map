@@ -681,6 +681,12 @@ Polymer({
       if (this.fitToMarkers) {
         this._fitToMarkersChanged();
       }
+
+      // make sure markers in cluster are updated if clustering is enabled
+      if(this.enableMarkersClustering && this.markerCluster){
+        this.markerCluster.markers = this.markers;
+        this.markerCluster.render();
+      }
     }
   },
 
