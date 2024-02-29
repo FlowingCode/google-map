@@ -965,7 +965,7 @@ Polymer({
   },
 
   _loadCustomControls() {
-    if(this.map) {
+    if(this.map && this.customControls) {
       for (var i = 0, control; control = this.customControls[i]; ++i) {
         const customControlDiv = document.createElement("div");
         const customControlSlot = document.createElement("slot");
