@@ -532,7 +532,16 @@ Polymer({
     customRenderer: {
       type: Object,
       value: null
-    }
+    }, 
+
+    /** 
+    * Custom controls buttons to be added to the map. 
+    */
+      customControls: {
+        type: Array,
+        value: null,
+        observer: '_loadCustomControls',
+      },
   },
 
   listeners: {
@@ -599,6 +608,7 @@ Polymer({
     this._loadMarkersCluster();
     this._updateObjects();
     this._addMapListeners();
+    this._loadCustomControls();
     this.fire('google-map-ready');
   },
 
@@ -951,6 +961,18 @@ Polymer({
         options.renderer = eval(this.customRenderer);
       }
       this.markerCluster = new MarkerClusterer(options); 
+    }
+  },
+
+  _loadCustomControls() {
+    if(this.map) {
+      for (var i = 0, control; control = this.customControls[i]; ++i) {
+        const customControlDiv = document.createElement("div");
+        const customControlSlot = document.createElement("slot");
+        customControlSlot.name = "customControlSlot_" + control.id;		 
+        customControlDiv.appendChild(customControlSlot);
+        this.map.controls[google.maps.ControlPosition[control.position]].push(customControlDiv);	   
+      }
     }
   },
 
