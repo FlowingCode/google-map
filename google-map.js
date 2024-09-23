@@ -976,6 +976,14 @@ Polymer({
     }
   },
 
+  _removeCustomControls() {
+    if(this.map && this.customControls) {
+      this.customControls = null;
+      this.shadowRoot.querySelectorAll('[name^="customControlSlot_"]').forEach(controlSlot => controlSlot.parentElement.remove());
+      this.querySelectorAll('[slot^="customControlSlot_"]').forEach(controlButton => controlButton.remove());
+    }
+  },
+
   attributeChanged(attrName) {
     if (!this.map) {
       return;
