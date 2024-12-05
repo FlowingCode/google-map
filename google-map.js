@@ -290,10 +290,13 @@ Polymer({
 
     /**
      * Version of the Google Maps API to use.
+     * 
+     * DEC-2024: use version 3.57 to avoid conflict with new styling model 
+     * See https://developers.google.com/maps/new-map-style-opt-in#opt-out
      */
     version: {
       type: String,
-      value: '3.exp',
+      value: '3.57',
     },
 
     /**
