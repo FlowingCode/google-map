@@ -291,12 +291,13 @@ Polymer({
     /**
      * Version of the Google Maps API to use.
      * 
-     * DEC-2024: use version 3.57 to avoid conflict with new styling model 
-     * See https://developers.google.com/maps/new-map-style-opt-in#opt-out
+     * 30-MAY-2025: change to current latest version 3.61.2 as 3.57 is a retired version 
+     * See https://developers.google.com/maps/documentation/javascript/versions#version-updates
+     * See release notes https://developers.google.com/maps/documentation/javascript/releases
      */
     version: {
       type: String,
-      value: '3.57',
+      value: '3.61.2',
     },
 
     /**
