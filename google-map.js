@@ -386,8 +386,8 @@ Polymer({
      * For style documentation see https://developers.google.com/maps/documentation/javascript/reference#MapTypeStyle
      */
     styles: {
-      type: Object,
-      value() { return {}; },
+      type: Array,
+      value() { return []; },
     },
 
     /**
