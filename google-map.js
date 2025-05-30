@@ -90,7 +90,7 @@ Polymer({
       <slot id="markers" name="markers"></slot>
     </iron-selector>
 
-    <slot id="objects"></slot>
+    <slot id="objects" name="objects"></slot>
 `,
 
   is: 'google-map',
