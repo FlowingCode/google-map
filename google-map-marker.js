@@ -284,6 +284,10 @@ Polymer({
         this._forwardEvent('click');
         this._forwardEvent('dblclick');
         this._forwardEvent('rightclick');
+        // Ensure long-press is set up if enabling at runtime
+        if (!this._touchHoldInstalled) {
+          this._setupTouchAndHold();
+        }
       } else {
         this._clearListener('click');
         this._clearListener('dblclick');
@@ -353,6 +357,8 @@ Polymer({
     if (this.marker) {
       this.setMap(null);
       google.maps.event.clearInstanceListeners(this.marker);
+      // Reset the touch-and-hold installation flag so it can be set up again
+      this._touchHoldInstalled = false;
     }
 
     if (this.map && this.map instanceof google.maps.Map) {
@@ -375,6 +381,11 @@ Polymer({
         // Create a new infowindow
         this.info = new google.maps.InfoWindow();
         this.openInfoHandler_ = google.maps.event.addListener(this.marker, 'click', () => {
+          // Swallow the synthetic click following a long-press
+          if (this._suppressNextClick) {
+            this._suppressNextClick = false;
+            return;
+          }
           this.open = true;
         });
 
@@ -425,6 +436,7 @@ Polymer({
     this._dragEventsChanged();
     this._mouseEventsChanged();
     this._openChanged();
+    this._setupTouchAndHold();
     setupDragHandler_.bind(this)();
   },
 
@@ -437,6 +449,10 @@ Polymer({
 
   _forwardEvent(name) {
     this._listeners[name] = google.maps.event.addListener(this.marker, name, (event) => {
+      if (name === 'click' && this._suppressNextClick) {
+        this._suppressNextClick = false;
+        return; // swallow the synthetic click caused by long-press
+      }
       this.fire(`google-map-marker-${name}`, event);
     });
   },
@@ -473,5 +489,78 @@ Polymer({
   getVisible() {
     return this.marker.getVisible();
   },
+
+  /**
+   * Sets up touch-and-hold gesture detection to simulate a right-click on mobile devices.
+   *
+   * The implementation attaches the necessary event listeners to the marker to detect a long press (touch and hold).
+   * When a long press is detected, it fires a 'google-map-marker-rightclick' custom event (which the server-side API can listen for).
+   * It also handles the cancellation of the gesture if the user moves their finger, releases it too early, or starts dragging the marker.
+   * Finally, it prevents a standard 'click' event from firing after a successful long press to avoid duplicate actions. 
+   */
+  _setupTouchAndHold() {
+    // Only enable when clickEvents are on and device is touch/coarse pointer
+    const isTouch =
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0) ||
+      (typeof matchMedia === "function" &&
+        matchMedia("(pointer: coarse)").matches);
+    if (!this.clickEvents || !isTouch) {
+      return; // Skip setup in non-touch environments
+    }
+
+    // Avoid double-binding listeners
+    if (this._touchHoldInstalled) {
+      return;
+    }
+
+    // Duration in milliseconds to consider a press a "long press".
+    // This value balances being quick enough to feel responsive while being long 
+    // enough to prevent accidental triggers. 800ms is a common choice.
+    const LONG_PRESS_DURATION = 800;
+
+    // Internal state variables
+    this._touchTimer = null; // A timer to track the duration of the press
+    this._suppressNextClick = this._suppressNextClick || false; // Flag to suppress the next click event if it follows a long press
+
+    // Listen for 'mousedown', which fires on both desktop clicks and mobile touch-starts
+    google.maps.event.addListener(this.marker, "mousedown", (e) => {
+
+      // Respect runtime toggling of clickEvents
+      if (!this.clickEvents) {
+        return;
+      }
+
+      // Ignore secondary button (desktop right-click)
+      if (e && e.domEvent && typeof e.domEvent.button === 'number' && e.domEvent.button === 2) {
+        return;
+      }
+
+      if (this._touchTimer) clearTimeout(this._touchTimer);
+      // Start the timer. If it completes, a long press has occurred.
+      this._touchTimer = setTimeout(() => {
+        // ensure the subsequent synthetic click is swallowed
+        this._suppressNextClick = true; 
+        // Fire the custom event that simulates a right-click
+        this.fire("google-map-marker-rightclick", e);
+        // timer consumed
+        this._touchTimer = null;
+      }, LONG_PRESS_DURATION);
+    });
+
+    // Helper function to cancel timer
+    const clearTimer = () => {
+      if (this._touchTimer) {
+        clearTimeout(this._touchTimer);
+        this._touchTimer = null;
+      }
+    };
+
+    // Cancel the timer if the user releases, drags, or moves off the marker
+    google.maps.event.addListener(this.marker, "mouseup", clearTimer);
+    google.maps.event.addListener(this.marker, "dragstart", clearTimer);
+    google.maps.event.addListener(this.marker, "mouseout", clearTimer);
+
+    this._touchHoldInstalled = true;
+  },  
 
 });
