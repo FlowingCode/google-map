@@ -575,7 +575,7 @@ Polymer({
     IronResizableBehavior,
   ],
 
-  _skipRobotoLoading() {
+  _skipWebfontLoading() {
 		var head = document.getElementsByTagName('head')[0];
 
 		// Save the original method
@@ -584,8 +584,8 @@ Polymer({
 		// Replace it
 		head.insertBefore = function(newElement, referenceElement) {
 
-			if (newElement.href && newElement.href.indexOf('//fonts.googleapis.com/css?family=Roboto') > -1) {
-				// Prevented Roboto from loading
+			if (newElement.href && (newElement.href.indexOf('//fonts.googleapis.com/css?family=Roboto') > -1 || newElement.href.indexOf('//fonts.googleapis.com/css2?family=Material+Symbols+Outlined') > -1)) {
+				// Prevented webfont from loading
 				return;
 			}
 			insertBefore.call(head, newElement, referenceElement);
@@ -603,7 +603,7 @@ Polymer({
       return; // not attached
     }
 
-    this._skipRobotoLoading();
+    this._skipWebfontLoading();
     this.map = new google.maps.Map(this.$.map, this._getMapOptions());
     this._listeners = {};
     this._updateCenter();
