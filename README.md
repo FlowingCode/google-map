@@ -12,6 +12,7 @@ Web components for embedding and interacting with Google Maps.
 * Define geographic points for use with poly elements (`google-map-point`)
 * Support for marker clustering
 * Touch-and-hold gesture to simulate right-click on mobile
+* Advanced markers support (`google-map-advanced-marker`), based on [`AdvancedMarkerElement`](https://developers.google.com/maps/documentation/javascript/advanced-markers/overview) (since version 3.10.0)
 
 ## Download release
 
@@ -35,6 +36,20 @@ import '@flowingcode/google-map/google-map-marker.js';
 ```html
 <google-map api-key="YOUR_API_KEY" fit-to-markers>
   <google-map-marker latitude="37.78" longitude="-122.4" draggable="true"></google-map-marker>
+</google-map>
+```
+
+Advanced markers require the map to define a `map-id` (`DEMO_MAP_ID` can be used for testing):
+
+```js
+import '@flowingcode/google-map/google-map-advanced-marker.js';
+```
+
+```html
+<google-map api-key="YOUR_API_KEY" map-id="DEMO_MAP_ID">
+  <google-map-advanced-marker slot="markers" latitude="37.78" longitude="-122.4"
+                              background="#4285F4" glyph-color="#FFFFFF">
+  </google-map-advanced-marker>
 </google-map>
 ```
 

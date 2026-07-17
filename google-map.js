@@ -698,7 +698,7 @@ Polymer({
 
       // make sure markers in cluster are updated if clustering is enabled
       if(this.enableMarkersClustering && this.markerCluster){
-        this.markerCluster.markers = this.markers;
+        this.markerCluster.markers = this._getClusterableMarkers();
         this.markerCluster.render();
       }
     }
@@ -740,7 +740,9 @@ Polymer({
    */
   clear() {
     for (var i = 0, m; m = this.markers[i]; ++i) {
-      m.marker.setMap(null);
+      // use the element-level setMap shim, which works for both
+      // google-map-marker and google-map-advanced-marker
+      m.setMap(null);
     }
   },
 
@@ -959,13 +961,24 @@ Polymer({
     if(this.map && this.enableMarkersClustering) {		
       let options = {
         map: this.map,
-        markers: this.markers
+        markers: this._getClusterableMarkers()
       };
       if (typeof this.customRenderer === 'string') {
         options.renderer = eval(this.customRenderer);
       }
-      this.markerCluster = new MarkerClusterer(options); 
+      this.markerCluster = new MarkerClusterer(options);
     }
+  },
+
+  /**
+   * Returns the markers that can be handed to the clusterer, skipping markers
+   * without a valid position.
+   */
+  _getClusterableMarkers() {
+    return this.markers.filter((marker) => {
+      const position = marker.getPosition && marker.getPosition();
+      return position && isFinite(position.lat()) && isFinite(position.lng());
+    });
   },
 
   _loadCustomControls() {
@@ -1005,12 +1018,22 @@ Polymer({
 
     if (this.map && this.fitToMarkers && this.markers.length > 0) {
       const latLngBounds = new google.maps.LatLngBounds();
+      let positionedMarkers = 0;
       for (var i = 0, m; m = this.markers[i]; ++i) {
-        latLngBounds.extend(new google.maps.LatLng(m.latitude, m.longitude));
+        const lat = parseFloat(m.latitude);
+        const lng = parseFloat(m.longitude);
+        // skip markers without a valid position
+        if (isFinite(lat) && isFinite(lng)) {
+          latLngBounds.extend(new google.maps.LatLng(lat, lng));
+          positionedMarkers++;
+        }
+      }
+      if (positionedMarkers === 0) {
+        return;
       }
 
       // For one marker, don't alter zoom, just center it.
-      if (this.markers.length > 1) {
+      if (positionedMarkers > 1) {
         this.map.fitBounds(latLngBounds);
       }
 
