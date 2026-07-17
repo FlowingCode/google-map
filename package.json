@@ -25,7 +25,7 @@
   "license": "Apache-2.0",
   "homepage": "https://elements.polymer-project.org/elements/google-map",
   "dependencies": {
-    "@googlemaps/markerclusterer": "^2.0.8",
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@flowingcode/google-apis": "^3.0.1",
     "@polymer/iron-resizable-behavior": "^3.0.0-pre.1",
     "@polymer/iron-selector": "^3.0.0-pre.1",
