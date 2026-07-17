@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map advanced markers clustering demo</title>
+  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body class="fullbleed">
+
+<dom-bind>
+  <template is="dom-bind">
+    <!-- With a valid map id and the marker library loaded, the clusterer also renders
+         the cluster icons as advanced markers, so no deprecation warning is emitted. -->
+    <google-map id="map" latitude="-31.636036" longitude="-60.7055271" zoom="10" language="en"
+                api-key="[[apiKey]]" map-id="DEMO_MAP_ID" enable-markers-clustering>
+    </google-map>
+  </template>
+</dom-bind>
+
+<script>
+(function() {
+  var t = document.querySelector('dom-bind');
+  var apiKey = new URLSearchParams(location.search).get('api-key');
+  if (apiKey) {
+    t.apiKey = apiKey;
+  }
+})();
+</script>
+
+<script type="module">
+import '../google-map.js';
+import '../google-map-advanced-marker.js';
+
+const COLORS = ['#EA4335', '#4285F4', '#34A853', '#FBBC04', '#9C27B0'];
+const CENTER = { lat: -31.636036, lng: -60.7055271 };
+
+// deterministic pseudo-random positions around the center
+let seed = 42;
+function random() {
+  seed = (seed * 16807) % 2147483647;
+  return seed / 2147483647;
+}
+
+function addMarkers() {
+  const map = document.querySelector('#map');
+  if (!map) {
+    return false;
+  }
+  for (let i = 0; i < 60; i++) {
+    const marker = document.createElement('google-map-advanced-marker');
+    marker.setAttribute('slot', 'markers');
+    marker.latitude = CENTER.lat + (random() - 0.5) * 0.5;
+    marker.longitude = CENTER.lng + (random() - 0.5) * 0.5;
+    marker.title = 'Marker ' + (i + 1);
+    marker.background = COLORS[i % COLORS.length];
+    marker.glyphColor = '#FFFFFF';
+    marker.glyph = String(i + 1);
+    marker.clickEvents = true;
+    marker.addEventListener('google-map-marker-click', function(e) {
+      console.log(this.title + ' clicked', e.detail.latLng.lat(), e.detail.latLng.lng());
+    });
+    map.appendChild(marker);
+  }
+  return true;
+}
+
+// The map lives inside the dom-bind template: add the markers right away if it is
+// already stamped, otherwise wait for it.
+if (!addMarkers()) {
+  document.addEventListener('dom-change', function handler() {
+    if (addMarkers()) {
+      document.removeEventListener('dom-change', handler);
+    }
+  });
+}
+</script>
+</body>
+</html>
