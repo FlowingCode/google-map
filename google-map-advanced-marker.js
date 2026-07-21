@@ -453,12 +453,23 @@ Polymer({
       subtree: true,
     });
 
-    // Adopt a custom content element added or replaced after the marker was built
-    const newContent = this.querySelector('[slot="content"]');
-    if (newContent && newContent !== this._customContent) {
-      this._customContent = newContent;
+    // Resolve the custom content element: adopt a new or replaced one, or drop the
+    // reference when the previously-used element was removed from the light DOM, so
+    // pin properties (or an icon) can take over again.
+    const light = this.querySelector('[slot="content"]');
+    let desired = this._customContent;
+    if (light) {
+      desired = light;
+    } else if (this._customContent
+        && !(this.marker && this.marker.content === this._customContent)) {
+      // no light-DOM content, and it is not the marker's currently-adopted content:
+      // the custom content was removed
+      desired = null;
+    }
+    if (desired !== this._customContent) {
+      this._customContent = desired;
       if (this.marker) {
-        this.marker.content = newContent;
+        this.marker.content = this._buildContent();
       }
     }
 
@@ -576,10 +587,21 @@ Polymer({
    * an image (iconUrl), a customized PinElement, or null for the default pin.
    */
   _buildContent() {
-    if (!this._customContent) {
-      // Once the advanced marker adopts the element it is moved out of the light DOM,
-      // so keep a reference for future rebuilds.
-      this._customContent = this.querySelector('[slot="content"]');
+    if (this._customContent === undefined) {
+      // Initial resolution before the content observer runs. Afterwards _customContent
+      // is managed by _contentChanged (an explicit element or null), so it is not
+      // re-queried here — once the marker adopts the element it is moved out of the
+      // light DOM and would no longer be found.
+      this._customContent = this.querySelector('[slot="content"]') || null;
+    }
+    if (this._customContent
+        && !this.contains(this._customContent)
+        && !(this.marker && this.marker.contains(this._customContent))) {
+      // the custom content element was removed: it is no longer in the light DOM, nor
+      // adopted by the marker (marker.contains stays true while the marker is off the
+      // map, e.g. clustered/hidden, so this does not misfire). Drop it so pin
+      // properties or an icon can take over.
+      this._customContent = null;
     }
     if (this._customContent) {
       return this._customContent;
