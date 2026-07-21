@@ -721,13 +721,10 @@ Polymer({
   getPosition() {
     const lat = parseFloat(this.latitude);
     const lng = parseFloat(this.longitude);
-    if (isFinite(lat) && isFinite(lng)) {
-      this._lastPosition = new google.maps.LatLng(lat, lng);
-    }
-    // Fall back to the last valid position so the clusterer never receives an
-    // invalid point for a marker it already holds; null only when the marker was
-    // never positioned, so it can be filtered out before clustering
-    return this._lastPosition || null;
+    // null when there are no valid coordinates, so unpositioned markers are filtered
+    // out before clustering; the parent map refreshes the cluster when the position
+    // changes, so a marker is never left in the clusterer with a null position
+    return isFinite(lat) && isFinite(lng) ? new google.maps.LatLng(lat, lng) : null;
   },
 
   setMap(map) {
