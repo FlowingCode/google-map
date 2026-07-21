@@ -550,6 +550,7 @@ Polymer({
 
   listeners: {
     'iron-resize': 'resize',
+    'google-map-marker-position-changed': '_onMarkerPositionChanged',
   },
 
   observers: [
@@ -971,14 +972,28 @@ Polymer({
   },
 
   /**
-   * Returns the markers that can be handed to the clusterer, skipping markers
-   * without a valid position.
+   * Returns the markers that can be handed to the clusterer, skipping markers that
+   * have no position. Only advanced markers report a null position (when their
+   * coordinates are missing/invalid); classic markers always return a LatLng, so they
+   * are passed through exactly as before.
    */
   _getClusterableMarkers() {
-    return this.markers.filter((marker) => {
-      const position = marker.getPosition && marker.getPosition();
-      return position && isFinite(position.lat()) && isFinite(position.lng());
-    });
+    return this.markers.filter((marker) => !marker.getPosition || marker.getPosition() != null);
+  },
+
+  /**
+   * Refreshes the cluster when a marker's position changes. The cluster list is
+   * otherwise only recomputed when markers are added or removed, so a marker that
+   * gains or loses a valid position after insertion would never enter or leave the
+   * cluster. Debounced so a batch of position updates triggers a single re-render.
+   */
+  _onMarkerPositionChanged() {
+    if (this.enableMarkersClustering && this.markerCluster) {
+      this.debounce('refreshClusters', () => {
+        this.markerCluster.markers = this._getClusterableMarkers();
+        this.markerCluster.render();
+      }, 50);
+    }
   },
 
   _loadCustomControls() {

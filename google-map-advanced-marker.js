@@ -320,6 +320,12 @@ Polymer({
       const lng = parseFloat(this.longitude);
       // clear the position (hiding the pin) when the coordinates are missing or invalid
       this.marker.position = isFinite(lat) && isFinite(lng) ? { lat: lat, lng: lng } : null;
+      // notify the parent map so clustering can be refreshed: the cluster list is
+      // otherwise only recomputed on marker add/remove, not on position change
+      this.dispatchEvent(new CustomEvent('google-map-marker-position-changed', {
+        bubbles: true,
+        composed: true,
+      }));
     }
   },
 
