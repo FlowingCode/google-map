@@ -426,6 +426,9 @@ Polymer({
     // pending long-press timer targeting the previous marker.
     this._mapGeneration = (this._mapGeneration || 0) + 1;
     this._clearTouchTimer();
+    // Drop any map buffered by an aborted generation: this reassignment supersedes it,
+    // so it must not be applied to the marker built for the new generation.
+    this._pendingMap = undefined;
 
     // Marker will be rebuilt, so disconnect existing one from old map and listeners.
     if (this.marker) {
