@@ -982,18 +982,25 @@ Polymer({
   },
 
   /**
-   * Refreshes the cluster when a marker's position changes. The cluster list is
-   * otherwise only recomputed when markers are added or removed, so a marker that
-   * gains or loses a valid position after insertion would never enter or leave the
-   * cluster. Debounced so a batch of position updates triggers a single re-render.
+   * Reacts to a marker's position change. Clustering and fit-to-markers are otherwise
+   * only recomputed when markers are added or removed, so a marker that gains or loses
+   * a valid position after insertion would never enter or leave the cluster, nor be
+   * included in the fitted bounds. Debounced so a batch of position updates triggers a
+   * single re-render.
    */
   _onMarkerPositionChanged() {
-    if (this.enableMarkersClustering && this.markerCluster) {
-      this.debounce('refreshClusters', () => {
+    if (!this.enableMarkersClustering && !this.fitToMarkers) {
+      return;
+    }
+    this.debounce('markerPositionChanged', () => {
+      if (this.enableMarkersClustering && this.markerCluster) {
         this.markerCluster.markers = this._getClusterableMarkers();
         this.markerCluster.render();
-      }, 50);
-    }
+      }
+      if (this.fitToMarkers) {
+        this._fitToMarkersChanged();
+      }
+    }, 50);
   },
 
   _loadCustomControls() {
