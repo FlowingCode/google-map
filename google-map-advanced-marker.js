@@ -530,7 +530,14 @@ Polymer({
     this._listeners = {};
     this._domListeners = {};
     if (!(google.maps.marker && google.maps.marker.AdvancedMarkerElement)) {
-      await google.maps.importLibrary('marker');
+      try {
+        await google.maps.importLibrary('marker');
+      } catch (e) {
+        console.warn('google-map-advanced-marker: failed to load the "marker" library; '
+          + 'the marker will not be displayed. Ensure the Maps API key has advanced markers '
+          + 'enabled and the network is reachable.', e);
+        return;
+      }
     }
     // The map may have changed or been cleared while the library was loading; only
     // the construction attempt for the latest map change may proceed.
