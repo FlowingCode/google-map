@@ -464,9 +464,10 @@ Polymer({
     if (light) {
       desired = light;
     } else if (this._customContent
-        && !(this.marker && this.marker.content === this._customContent)) {
-      // no light-DOM content, and it is not the marker's currently-adopted content:
-      // the custom content was removed
+        && !this.contains(this._customContent)
+        && !(this.marker && this.marker.contains(this._customContent))) {
+      // no light-DOM content, and it is no longer adopted by the marker: the custom
+      // content was removed (same containment check used by _buildContent)
       desired = null;
     }
     if (desired !== this._customContent) {
