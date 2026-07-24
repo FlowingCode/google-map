@@ -1000,7 +1000,7 @@ Polymer({
       if (this.fitToMarkers) {
         this._fitToMarkersChanged();
       }
-    }, 50);
+    }, 150);
   },
 
   _loadCustomControls() {
