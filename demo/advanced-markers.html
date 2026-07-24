@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map advanced markers demo</title>
+  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body class="fullbleed">
+
+<dom-bind>
+  <template is="dom-bind">
+    <!-- Advanced markers require a valid map id. DEMO_MAP_ID can be used for testing. -->
+    <google-map latitude="37.779" longitude="-122.3892" zoom="11" language="en"
+                api-key="[[apiKey]]" map-id="DEMO_MAP_ID">
+
+      <!-- Default pin -->
+      <google-map-advanced-marker slot="markers" latitude="37.779" longitude="-122.3892"
+                                  title="Default pin" click-events>
+        <b>Default advanced marker</b>
+      </google-map-advanced-marker>
+
+      <!-- Customized pin (PinElement) -->
+      <google-map-advanced-marker slot="markers" latitude="37.804" longitude="-122.2711"
+                                  title="Customized pin" background="#4285F4"
+                                  border-color="#0D47A1" glyph-color="#FFFFFF" glyph="F"
+                                  scale="1.5" draggable="true" drag-events>
+      </google-map-advanced-marker>
+
+      <!-- Image icon -->
+      <google-map-advanced-marker slot="markers" latitude="37.386" longitude="-122.0837"
+                                  title="Image icon"
+                                  icon-url="https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/San_Francisco_Giants_Cap_Insignia.svg/50px-San_Francisco_Giants_Cap_Insignia.svg.png">
+      </google-map-advanced-marker>
+
+      <!-- Custom HTML content -->
+      <google-map-advanced-marker slot="markers" latitude="37.5630" longitude="-122.3255"
+                                  title="Custom HTML content" click-events>
+        <div slot="content"
+             style="background: #FBBC04; border: 2px solid #EA4335; border-radius: 8px; padding: 4px 8px; font-family: sans-serif;">
+          Custom HTML marker
+        </div>
+        <span>InfoWindow of the custom HTML marker</span>
+      </google-map-advanced-marker>
+
+    </google-map>
+  </template>
+</dom-bind>
+
+<script>
+(function() {
+  var t = document.querySelector('dom-bind');
+  var apiKey = new URLSearchParams(location.search).get('api-key');
+  if (apiKey) {
+    t.apiKey = apiKey;
+  }
+})();
+</script>
+
+<script type="module">
+import '../google-map.js';
+import '../google-map-advanced-marker.js';
+
+function wireEventLogging() {
+  const markers = document.querySelectorAll('google-map-advanced-marker');
+  if (!markers.length) {
+    return false;
+  }
+  markers.forEach(function(marker) {
+    marker.addEventListener('google-map-marker-click', function(e) {
+      console.log('advanced marker clicked', e.detail.latLng.lat(), e.detail.latLng.lng());
+    });
+    marker.addEventListener('google-map-marker-dragend', function(e) {
+      console.log('advanced marker dropped', e.detail.latLng.lat(), e.detail.latLng.lng());
+    });
+    marker.addEventListener('google-map-marker-rightclick', function(e) {
+      console.log('advanced marker rightclicked (or touch-and-hold)',
+          e.detail.latLng.lat(), e.detail.latLng.lng());
+    });
+  });
+  return true;
+}
+
+// The markers live inside the dom-bind template: wire the logging right away if it
+// is already stamped, otherwise wait for it.
+if (!wireEventLogging()) {
+  document.addEventListener('dom-change', function handler() {
+    if (wireEventLogging()) {
+      document.removeEventListener('dom-change', handler);
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -550,6 +550,7 @@ Polymer({
 
   listeners: {
     'iron-resize': 'resize',
+    'google-map-marker-position-changed': '_onMarkerPositionChanged',
   },
 
   observers: [
@@ -698,7 +699,7 @@ Polymer({
 
       // make sure markers in cluster are updated if clustering is enabled
       if(this.enableMarkersClustering && this.markerCluster){
-        this.markerCluster.markers = this.markers;
+        this.markerCluster.markers = this._getClusterableMarkers();
         this.markerCluster.render();
       }
     }
@@ -740,7 +741,9 @@ Polymer({
    */
   clear() {
     for (var i = 0, m; m = this.markers[i]; ++i) {
-      m.marker.setMap(null);
+      // use the element-level setMap shim, which works for both
+      // google-map-marker and google-map-advanced-marker
+      m.setMap(null);
     }
   },
 
@@ -959,13 +962,45 @@ Polymer({
     if(this.map && this.enableMarkersClustering) {		
       let options = {
         map: this.map,
-        markers: this.markers
+        markers: this._getClusterableMarkers()
       };
       if (typeof this.customRenderer === 'string') {
         options.renderer = eval(this.customRenderer);
       }
-      this.markerCluster = new MarkerClusterer(options); 
+      this.markerCluster = new MarkerClusterer(options);
     }
+  },
+
+  /**
+   * Returns the markers that can be handed to the clusterer, skipping markers that
+   * have no position. Only advanced markers report a null position (when their
+   * coordinates are missing/invalid); classic markers always return a LatLng, so they
+   * are passed through exactly as before.
+   */
+  _getClusterableMarkers() {
+    return this.markers.filter((marker) => !marker.getPosition || marker.getPosition() != null);
+  },
+
+  /**
+   * Reacts to a marker's position change. Clustering and fit-to-markers are otherwise
+   * only recomputed when markers are added or removed, so a marker that gains or loses
+   * a valid position after insertion would never enter or leave the cluster, nor be
+   * included in the fitted bounds. Debounced so a batch of position updates triggers a
+   * single re-render.
+   */
+  _onMarkerPositionChanged() {
+    if (!this.enableMarkersClustering && !this.fitToMarkers) {
+      return;
+    }
+    this.debounce('markerPositionChanged', () => {
+      if (this.enableMarkersClustering && this.markerCluster) {
+        this.markerCluster.markers = this._getClusterableMarkers();
+        this.markerCluster.render();
+      }
+      if (this.fitToMarkers) {
+        this._fitToMarkersChanged();
+      }
+    }, 150);
   },
 
   _loadCustomControls() {
@@ -1005,12 +1040,22 @@ Polymer({
 
     if (this.map && this.fitToMarkers && this.markers.length > 0) {
       const latLngBounds = new google.maps.LatLngBounds();
+      let positionedMarkers = 0;
       for (var i = 0, m; m = this.markers[i]; ++i) {
-        latLngBounds.extend(new google.maps.LatLng(m.latitude, m.longitude));
+        const lat = parseFloat(m.latitude);
+        const lng = parseFloat(m.longitude);
+        // skip markers without a valid position
+        if (isFinite(lat) && isFinite(lng)) {
+          latLngBounds.extend(new google.maps.LatLng(lat, lng));
+          positionedMarkers++;
+        }
+      }
+      if (positionedMarkers === 0) {
+        return;
       }
 
       // For one marker, don't alter zoom, just center it.
-      if (this.markers.length > 1) {
+      if (positionedMarkers > 1) {
         this.map.fitBounds(latLngBounds);
       }
 

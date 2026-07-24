@@ -15,6 +15,11 @@ function onDragEnd_(e, details, sender) {
   this.longitude = e.latLng.lng();
 }
 
+/**
+ * `google-map-marker` is based on `google.maps.Marker`, which Google has deprecated in favor
+ * of advanced markers. It remains functional and supported, but for new development consider
+ * using `google-map-advanced-marker`, which requires the map to define a `map-id`.
+ */
 Polymer({
   _template: html`
     <style>
