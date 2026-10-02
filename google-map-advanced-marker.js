@@ -18,6 +18,10 @@ The parent `google-map` must have a `map-id`, which Advanced Markers require.
 As with `google-map-marker`, the element's content is shown in an InfoWindow when the marker is clicked,
 and the native `title`, `hidden` and `draggable` (`draggable="true"`) attributes set the marker's title,
 visibility and whether it can be dragged.
+
+These `google-map-marker` features are not supported, as Advanced Markers have no equivalent:
+`animation`, `optimized`, `icon` with a `google.maps.SymbolPath` constant, `icon` sprites (`size` and `origin`),
+`label` together with `icon`, and the `fontFamily`, `fontSize`, `fontWeight` and `className` of a `label`.
 */
 Polymer({
   _template: html`
@@ -206,6 +210,37 @@ Polymer({
     },
 
     /**
+     * Image for the marker, instead of the default pin. One of:
+     * - an image URL;
+     * - an Icon object: `{url, scaledSize: {width, height}, anchor: {x, y}}`. By default, the anchor
+     *   is the center of the bottom of the image;
+     * - a Symbol object with an SVG `path`: `{path, anchor, fillColor, fillOpacity, rotation, scale,
+     *   strokeColor, strokeOpacity, strokeWeight}`, with the same defaults as in `google.maps.Symbol`.
+     *
+     * Not supported: `google.maps.SymbolPath` constants as `path`, and sprites (`size` and `origin`).
+     *
+     * @type string|google.maps.Icon|google.maps.Symbol
+     */
+    icon: {
+      type: Object,
+      value: null,
+    },
+
+    /**
+     * Label shown in the default pin, instead of its glyph: a text, or a MarkerLabel object
+     * `{text, color}`. Not shown when `icon` is set.
+     *
+     * Not supported, as the pin's glyph only takes a text and a color: `fontFamily`, `fontSize`,
+     * `fontWeight` and `className`.
+     *
+     * @type string|google.maps.MarkerLabel
+     */
+    label: {
+      type: Object,
+      value: null,
+    },
+
+    /**
      * Background color of the default pin.
      */
     pinBackground: {
@@ -249,7 +284,7 @@ Polymer({
 
   observers: [
     '_updatePosition(latitude, longitude)',
-    '_updatePin(pinBackground, pinBorderColor, pinGlyphColor, pinScale)',
+    '_updateContent(icon, label, pinBackground, pinBorderColor, pinGlyphColor, pinScale)',
   ],
 
   detached() {
@@ -292,19 +327,97 @@ Polymer({
     }
   },
 
-  _updatePin() {
+  _updateContent() {
     if (!this.marker) {
       return;
     }
+    // Null content restores the default pin.
+    this.marker.content = this.icon ? this._buildIcon(this.icon) : this._buildPin();
+  },
+
+  _buildPin() {
     const options = {};
     if (this.pinBackground) { options.background = this.pinBackground; }
     if (this.pinBorderColor) { options.borderColor = this.pinBorderColor; }
     if (this.pinGlyphColor) { options.glyphColor = this.pinGlyphColor; }
     if (this.pinScale) { options.scale = this.pinScale; }
-    // Without options, null content restores the default pin.
-    this.marker.content = Object.keys(options).length
-      ? new google.maps.marker.PinElement(options)
-      : null;
+    const label = this._getLabel();
+    if (label) {
+      options.glyphText = String(label.text);
+      // Same default color as google.maps.MarkerLabel
+      options.glyphColor = label.color || 'black';
+    }
+    return Object.keys(options).length ? new google.maps.marker.PinElement(options) : null;
+  },
+
+  _getLabel() {
+    // Any value that is not an object is the label's text: the attribute is parsed as JSON,
+    // so e.g. label="1" is a number.
+    const label = this.label !== null && typeof this.label === 'object' ? this.label : { text: this.label };
+    return label.text == null || label.text === '' ? null : label;
+  },
+
+  // The content is a zero-size element at the marker's position, and the icon is drawn around it,
+  // so that the icon's anchor is placed at the marker's position.
+  _buildIcon(icon) {
+    if (typeof icon === 'string') {
+      icon = { url: icon };
+    }
+    let image;
+    if (typeof icon.path === 'string') {
+      image = this._buildSymbol(icon);
+    } else if (icon.url) {
+      image = this._buildImage(icon);
+    } else {
+      // google.maps.SymbolPath constants have no equivalent in Advanced Markers: the default pin is shown.
+      return null;
+    }
+    const content = document.createElement('div');
+    content.style.position = 'relative';
+    content.style.width = '0';
+    content.style.height = '0';
+    content.appendChild(image);
+    return content;
+  },
+
+  _buildImage(icon) {
+    const image = document.createElement('img');
+    image.src = icon.url;
+    image.style.position = 'absolute';
+    if (icon.scaledSize) {
+      image.style.width = `${icon.scaledSize.width}px`;
+      image.style.height = `${icon.scaledSize.height}px`;
+    }
+    // By default, the anchor is the center of the bottom of the image, as in google.maps.Icon
+    image.style.transform = icon.anchor
+      ? `translate(${-icon.anchor.x}px, ${-icon.anchor.y}px)`
+      : 'translate(-50%, -100%)';
+    return image;
+  },
+
+  // Same defaults as google.maps.Symbol in markers
+  _buildSymbol(symbol) {
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const scale = symbol.scale != null ? symbol.scale : 1;
+    const anchor = symbol.anchor || { x: 0, y: 0 };
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('width', '1');
+    svg.setAttribute('height', '1');
+    svg.style.position = 'absolute';
+    svg.style.overflow = 'visible';
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', symbol.path);
+    path.setAttribute('fill', symbol.fillColor || 'black');
+    path.setAttribute('fill-opacity', symbol.fillOpacity != null ? symbol.fillOpacity : 0);
+    path.setAttribute('stroke', symbol.strokeColor || 'black');
+    path.setAttribute('stroke-opacity', symbol.strokeOpacity != null ? symbol.strokeOpacity : 1);
+    path.setAttribute('stroke-width', symbol.strokeWeight != null ? symbol.strokeWeight : scale);
+    // The stroke weight is in pixels, so it isn't scaled with the path
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
+    path.setAttribute('transform',
+      `rotate(${symbol.rotation || 0}) scale(${scale}) translate(${-anchor.x}, ${-anchor.y})`);
+    svg.appendChild(path);
+    return svg;
   },
 
   _clickEventsChanged() {
@@ -493,7 +606,7 @@ Polymer({
       this.latitude = e.latLng.lat();
       this.longitude = e.latLng.lng();
     });
-    this._updatePin();
+    this._updateContent();
     this._applyNativeAttributes();
     this._observeNativeAttributes();
     this._contentChanged();
