@@ -498,6 +498,9 @@ Polymer({
     /**
      * If set, the custom style associated with that Map ID is applied.
      * see https://developers.google.com/maps/documentation/javascript/reference/map?hl=en#MapOptions.mapId
+     *
+     * Required by `google-map-advanced-marker`. When a Map ID is set, the `styles` property
+     * is not applied: styling is controlled from the Google Cloud console instead.
      */
     mapId: {
       type: String,
@@ -648,6 +651,10 @@ Polymer({
     if (this.getAttribute('draggable') != null) {
       mapOptions.draggable = this.draggable;
     }
+    // Styles cannot be set together with a Map ID (Maps API logs a warning and ignores them).
+    if (this.mapId) {
+      delete mapOptions.styles;
+    }
     for (const p in this.additionalMapOptions) { mapOptions[p] = this.additionalMapOptions[p]; }
 
     return mapOptions;
@@ -740,7 +747,7 @@ Polymer({
    */
   clear() {
     for (var i = 0, m; m = this.markers[i]; ++i) {
-      m.marker.setMap(null);
+      m.setMap(null);
     }
   },
 
