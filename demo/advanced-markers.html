@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map advanced markers demo</title>
+  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+    }
+    #controls {
+      position: absolute;
+      left: 10%;
+      bottom: 10%;
+    }
+  </style>
+</head>
+<body class="fullbleed">
+
+<dom-bind>
+  <template is="dom-bind">
+    <!-- Advanced markers require a Map ID. DEMO_MAP_ID can be used for testing. -->
+    <google-map latitude="37.779" longitude="-122.3892" map-id="DEMO_MAP_ID" fit-to-markers
+                language="en" api-key="[[apiKey]]">
+      <google-map-advanced-marker slot="markers" latitude="37.779" longitude="-122.3892"
+                                  title="Go Giants!" pin-background="#FD5A1E" pin-border-color="#27251F"
+                                  pin-glyph-color="#27251F">
+        <b>Oracle Park</b>
+      </google-map-advanced-marker>
+      <google-map-advanced-marker id="draggable" slot="markers" latitude="37.804" longitude="-122.2711"
+                                  title="Drag me" draggable="true" drag-events pin-scale="1.4"></google-map-advanced-marker>
+      <google-map-advanced-marker id="toggle" slot="markers" latitude="37.386" longitude="-122.0837"
+                                  title="Toggle me" click-events></google-map-advanced-marker>
+      <!-- Legacy markers can be used on the same map -->
+      <google-map-marker slot="markers" latitude="37.5485" longitude="-121.9886"
+                         title="Legacy marker"></google-map-marker>
+    </google-map>
+  </template>
+</dom-bind>
+
+<div id="controls">
+  <button onclick="toggleHidden()">Toggle hidden</button>
+  <button onclick="changePinColor()">Change pin color</button>
+</div>
+
+<script>
+(function() {
+  var t = document.querySelector('dom-bind');
+  var apiKey = new URLSearchParams(location.search).get('api-key');
+  if (apiKey) {
+    t.apiKey = apiKey;
+  }
+})();
+</script>
+
+<script type="module">
+import '../google-map.js';
+import '../google-map-marker.js';
+import '../google-map-advanced-marker.js';
+
+window.toggleHidden = function() {
+  var marker = document.querySelector('#toggle');
+  marker.hidden = !marker.hidden;
+};
+
+window.changePinColor = function() {
+  var marker = document.querySelector('#toggle');
+  marker.pinBackground = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+};
+
+document.addEventListener('dom-change', function() {
+  document.querySelector('#draggable').addEventListener('google-map-marker-dragend', function(e) {
+    console.log('pin dropped', e.detail.latLng.lat(), e.detail.latLng.lng());
+  });
+  document.querySelector('#toggle').addEventListener('google-map-marker-click', function(e) {
+    console.log('marker clicked', e.detail.latLng.lat(), e.detail.latLng.lng());
+  });
+});
+</script>
+</body>
+</html>
