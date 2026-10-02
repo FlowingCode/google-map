@@ -40,6 +40,56 @@ Polymer({
    */
 
   /**
+   * Fired when the marker was double clicked. Requires the clickEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-dblclick
+   */
+
+  /**
+   * Fired for a rightclick on the marker, or a touch-and-hold on touch devices.
+   * Requires the clickEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-rightclick
+   */
+
+  /**
+   * Fired for a mousedown on the marker. Requires the mouseEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-mousedown
+   */
+
+  /**
+   * Fired when the mouse moves over the marker. Requires the mouseEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-mousemove
+   */
+
+  /**
+   * Fired when the mouse leaves the marker. Requires the mouseEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-mouseout
+   */
+
+  /**
+   * Fired when the mouse enters the marker. Requires the mouseEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-mouseover
+   */
+
+  /**
+   * Fired for a mouseup on the marker. Requires the mouseEvents attribute to be true.
+   *
+   * @param {{latLng: google.maps.LatLng, domEvent: MouseEvent}} event The marker position and the DOM event.
+   * @event google-map-marker-mouseup
+   */
+
+  /**
    * Fired repeatedly while the user drags the marker. Requires the dragEvents attribute to be true.
    *
    * @event google-map-marker-drag
@@ -101,7 +151,8 @@ Polymer({
     },
 
     /**
-     * When true, marker click events are automatically registered.
+     * When true, marker click, dblclick and rightclick events are automatically registered.
+     * On touch devices, a touch-and-hold on the marker fires a rightclick event.
      */
     clickEvents: {
       type: Boolean,
@@ -116,6 +167,15 @@ Polymer({
       type: Boolean,
       value: false,
       observer: '_dragEventsChanged',
+    },
+
+    /**
+     * When true, marker mouse* events are automatically registered.
+     */
+    mouseEvents: {
+      type: Boolean,
+      value: false,
+      observer: '_mouseEventsChanged',
     },
 
     /**
@@ -251,8 +311,33 @@ Polymer({
     if (this.marker) {
       if (this.clickEvents) {
         this._forwardEvent('click');
+        this._forwardDomEvent('dblclick', 'dblclick');
+        this._forwardDomEvent('contextmenu', 'rightclick');
+        this._setupTouchAndHold();
       } else {
         this._clearListener('click');
+        this._clearListener('dblclick');
+        this._clearListener('rightclick');
+      }
+    }
+  },
+
+  _mouseEventsChanged() {
+    if (this.marker) {
+      if (this.mouseEvents) {
+        this._forwardDomEvent('mousedown', 'mousedown');
+        this._forwardDomEvent('mousemove', 'mousemove');
+        // mouseenter/mouseleave, so that moving over the parts of the marker's content
+        // fires once, as google.maps.Marker's mouseover/mouseout do.
+        this._forwardDomEvent('mouseleave', 'mouseout');
+        this._forwardDomEvent('mouseenter', 'mouseover');
+        this._forwardDomEvent('mouseup', 'mouseup');
+      } else {
+        this._clearListener('mousedown');
+        this._clearListener('mousemove');
+        this._clearListener('mouseout');
+        this._clearListener('mouseover');
+        this._clearListener('mouseup');
       }
     }
   },
@@ -310,6 +395,8 @@ Polymer({
     if (this.marker) {
       // Before removing the marker from the map, so that the infowindow is reopened on the new marker.
       this._destroyInfoWindow();
+      this._clearTouchTimer();
+      this._touchHoldMarker = null;
       this.marker.map = null;
       google.maps.event.clearInstanceListeners(this.marker);
     }
@@ -335,6 +422,10 @@ Polymer({
         // Create a new infowindow
         this.info = new google.maps.InfoWindow();
         this.openInfoHandler_ = google.maps.event.addListener(this.marker, 'click', () => {
+          // Swallow the click following a touch-and-hold
+          if (this._suppressNextClick) {
+            return;
+          }
           this.open = true;
         });
 
@@ -408,11 +499,13 @@ Polymer({
     this._contentChanged();
     this._clickEventsChanged();
     this._dragEventsChanged();
+    this._mouseEventsChanged();
   },
 
+  // Both Maps API listeners and the DOM listeners added by _forwardDomEvent have a remove() method.
   _clearListener(name) {
     if (this._listeners && this._listeners[name]) {
-      google.maps.event.removeListener(this._listeners[name]);
+      this._listeners[name].remove();
       this._listeners[name] = null;
     }
   },
@@ -423,8 +516,90 @@ Polymer({
   _forwardEvent(name) {
     this._clearListener(name);
     this._listeners[name] = google.maps.event.addListener(this.marker, name, (event) => {
+      // Swallow the click following a touch-and-hold
+      if (name === 'click' && this._suppressNextClick) {
+        return;
+      }
       this.fire(`google-map-marker-${name}`, event);
     });
+  },
+
+  // AdvancedMarkerElement only fires 'click' as a Maps API event, so the other mouse events are
+  // taken from the DOM. The event detail has the same latLng and domEvent as google-map-marker's
+  // events, where latLng is the marker's position.
+  _forwardDomEvent(domName, name) {
+    this._clearListener(name);
+    const marker = this.marker;
+    const handler = (domEvent) => {
+      if (name === 'rightclick') {
+        // The platform already fired a right click, so a pending touch-and-hold must not fire another one.
+        this._clearTouchTimer();
+        if (this._suppressNextClick) {
+          return; // a touch-and-hold already fired it
+        }
+      }
+      this.fire(`google-map-marker-${name}`, { latLng: this.getPosition(), domEvent });
+    };
+    marker.addEventListener(domName, handler);
+    this._listeners[name] = { remove: () => marker.removeEventListener(domName, handler) };
+  },
+
+  _clearTouchTimer() {
+    if (this._touchTimer) {
+      clearTimeout(this._touchTimer);
+      this._touchTimer = null;
+    }
+  },
+
+  /**
+   * Sets up touch-and-hold gesture detection to simulate a right-click on touch devices,
+   * as google-map-marker does.
+   *
+   * A long press fires a 'google-map-marker-rightclick' event, and the click that follows it is
+   * swallowed. The gesture is cancelled if the user releases too early, moves off the marker or
+   * starts dragging it.
+   */
+  _setupTouchAndHold() {
+    // Only enable when clickEvents are on and device is touch/coarse pointer
+    const isTouch =
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0) ||
+      (typeof matchMedia === "function" &&
+        matchMedia("(pointer: coarse)").matches);
+    // Installed once per marker, which is rebuilt when the map changes.
+    if (!this.clickEvents || !isTouch || this._touchHoldMarker === this.marker) {
+      return;
+    }
+    this._touchHoldMarker = this.marker;
+
+    // Duration in milliseconds to consider a press a "long press".
+    const LONG_PRESS_DURATION = 800;
+
+    const marker = this.marker;
+    marker.addEventListener('pointerdown', (domEvent) => {
+      // A new gesture starts: a swallowed click of a previous touch-and-hold no longer applies.
+      // The flag is cleared here, and not by the click handlers, so that all of them swallow the same click.
+      this._suppressNextClick = false;
+
+      // Respect runtime toggling of clickEvents, ignore mouse pointers (touchscreen laptops),
+      // and ignore the secondary button (e.g. of a pen)
+      if (!this.clickEvents || domEvent.pointerType === 'mouse' || domEvent.button === 2) {
+        return;
+      }
+
+      this._clearTouchTimer();
+      this._touchTimer = setTimeout(() => {
+        this._touchTimer = null;
+        this._suppressNextClick = true;
+        this.fire('google-map-marker-rightclick', { latLng: this.getPosition(), domEvent });
+      }, LONG_PRESS_DURATION);
+    });
+
+    // Cancel the timer if the user releases, drags, or moves off the marker
+    const clearTimer = () => this._clearTouchTimer();
+    marker.addEventListener('pointerup', clearTimer);
+    marker.addEventListener('pointercancel', clearTimer);
+    marker.addEventListener('pointerleave', clearTimer);
+    google.maps.event.addListener(marker, 'dragstart', clearTimer);
   },
 
   /* Same API as google-map-marker, used by google-map and for marker clustering */
