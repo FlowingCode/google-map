@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map advanced markers clustering demo</title>
+  <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+    }
+    google-map {
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="fullbleed">
+
+<script type="module">
+import '../google-map.js';
+import '../google-map-advanced-marker.js';
+
+// The map is built in script to generate many markers.
+// Markers are added before the map is attached, so they are picked up when the map is initialized.
+const map = document.createElement('google-map');
+map.apiKey = new URLSearchParams(location.search).get('api-key');
+// Advanced markers require a Map ID. DEMO_MAP_ID can be used for testing.
+map.mapId = 'DEMO_MAP_ID';
+map.latitude = 37.75;
+map.longitude = -122.35;
+map.zoom = 10;
+map.enableMarkersClustering = true;
+
+const colors = ['#EA4335', '#4285F4', '#FBBC04', '#34A853'];
+for (let i = 0; i < 100; i++) {
+  const marker = document.createElement('google-map-advanced-marker');
+  marker.slot = 'markers';
+  // Deterministic spread around San Francisco
+  marker.latitude = 37.70 + ((i * 37) % 100) / 1000;
+  marker.longitude = -122.50 + ((i * 53) % 100) / 500;
+  marker.title = `Marker ${i}`;
+  marker.pinBackground = colors[i % colors.length];
+  marker.pinBorderColor = '#ffffff';
+  marker.pinGlyphColor = '#ffffff';
+  map.appendChild(marker);
+}
+
+document.body.appendChild(map);
+</script>
+</body>
+</html>
