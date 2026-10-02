@@ -8,6 +8,7 @@ Web components for embedding and interacting with Google Maps.
 
 * Display an interactive Google Map (`google-map`)
 * Add draggable and customizable markers (`google-map-marker`)
+* Add markers based on Google's Advanced Markers (`google-map-advanced-marker`)
 * Draw polygons, polylines, and rectangles on the map (`google-map-poly`)
 * Define geographic points for use with poly elements (`google-map-point`)
 * Support for marker clustering
@@ -28,6 +29,7 @@ Then import the components you need like:
 ```js
 import '@flowingcode/google-map/google-map.js';
 import '@flowingcode/google-map/google-map-marker.js';
+import '@flowingcode/google-map/google-map-advanced-marker.js';
 ```
 
 ## Usage
@@ -53,6 +55,11 @@ For polys:
 
 ```
 http://localhost:8000/demo/polys.html?api-key=YOUR_API_KEY
+```
+For advanced markers:
+
+```
+http://localhost:8000/demo/advanced-markers.html?api-key=YOUR_API_KEY
 ```
 
 ## Release notes
@@ -102,3 +109,16 @@ Then, follow these steps for creating a contribution:
 ```
 
 You need a valid [Google Maps API key](https://developers.google.com/maps/documentation/javascript/get-api-key) to use these components.
+
+## Advanced markers
+
+`google.maps.Marker`, used by `google-map-marker`, is [deprecated](https://developers.google.com/maps/deprecations) in favor of `AdvancedMarkerElement`. Use `google-map-advanced-marker` to use Advanced Markers instead. Both elements can be used on the same map.
+
+Advanced Markers require a [Map ID](https://developers.google.com/maps/documentation/get-map-id) (`DEMO_MAP_ID` can be used for testing). Note that when a Map ID is set, the `styles` property of `google-map` is not applied: the map is styled from the Google Cloud console instead.
+
+```html
+<google-map api-key="YOUR_API_KEY" map-id="YOUR_MAP_ID" fit-to-markers>
+  <google-map-advanced-marker slot="markers" latitude="37.78" longitude="-122.4" title="My location"
+      pin-background="#FBBC04" draggable="true"></google-map-advanced-marker>
+</google-map>
+```
