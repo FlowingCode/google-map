@@ -648,9 +648,14 @@ Polymer({
     const handler = (domEvent) => {
       if (name === 'rightclick') {
         // The platform already fired a right click, so a pending touch-and-hold must not fire another one.
+        const touchHoldPending = !!this._touchTimer;
         this._clearTouchTimer();
         if (this._suppressNextClick) {
           return; // a touch-and-hold already fired it
+        }
+        if (touchHoldPending) {
+          // The right click ends the touch-and-hold, so the click that follows it is swallowed too.
+          this._suppressNextClick = true;
         }
       }
       this.fire(`google-map-marker-${name}`, { latLng: this.getPosition(), domEvent });
