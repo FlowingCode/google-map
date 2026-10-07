@@ -289,6 +289,7 @@ Polymer({
 
   detached() {
     if (this.marker) {
+      this._clearTouchTimer();
       this._setMarkerMap(null);
     }
     if (this._contentObserver) { this._contentObserver.disconnect(); }
@@ -431,6 +432,7 @@ Polymer({
         this._clearListener('click');
         this._clearListener('dblclick');
         this._clearListener('rightclick');
+        this._clearTouchTimer();
       }
     }
   },
