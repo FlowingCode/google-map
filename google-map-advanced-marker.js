@@ -290,6 +290,7 @@ Polymer({
   detached() {
     if (this.marker) {
       this._clearTouchTimer();
+      this._clearSuppressNextClick();
       this._setMarkerMap(null);
     }
     if (this._contentObserver) { this._contentObserver.disconnect(); }
@@ -512,6 +513,7 @@ Polymer({
       this._destroyInfoWindow();
       this._clearTouchTimer();
       this._touchHoldMarker = null;
+      this._clearSuppressNextClick();
       this.marker.map = null;
       google.maps.event.clearInstanceListeners(this.marker);
     }
@@ -671,6 +673,14 @@ Polymer({
     }
   },
 
+  // Also cancels a pending delayed clear of a previous gesture, so that it can't clear the flag
+  // after a new gesture has set it.
+  _clearSuppressNextClick() {
+    clearTimeout(this._suppressTimer);
+    this._suppressTimer = null;
+    this._suppressNextClick = false;
+  },
+
   /**
    * Sets up touch-and-hold gesture detection to simulate a right-click on touch devices,
    * as google-map-marker does.
@@ -703,7 +713,7 @@ Polymer({
       startY = domEvent.clientY;
       // A new gesture starts: a swallowed click of a previous touch-and-hold no longer applies.
       // The flag is cleared here, and not by the click handlers, so that all of them swallow the same click.
-      this._suppressNextClick = false;
+      this._clearSuppressNextClick();
 
       // Respect runtime toggling of clickEvents, ignore mouse pointers (touchscreen laptops),
       // and ignore the secondary button (e.g. of a pen)
@@ -721,8 +731,18 @@ Polymer({
 
     // Cancel the timer if the user releases, drags, or moves off the marker
     const clearTimer = () => this._clearTouchTimer();
-    marker.addEventListener('pointerup', clearTimer);
-    marker.addEventListener('pointercancel', clearTimer);
+    // The click that follows a touch-and-hold arrives right after the pointer is released, and some
+    // platforms don't fire it at all. Clicks stop being swallowed shortly after the gesture ends,
+    // so that a later activation (e.g. from the keyboard) is not swallowed.
+    const endGesture = () => {
+      clearTimer();
+      if (this._suppressNextClick) {
+        clearTimeout(this._suppressTimer);
+        this._suppressTimer = setTimeout(() => { this._suppressNextClick = false; }, 500);
+      }
+    };
+    marker.addEventListener('pointerup', endGesture);
+    marker.addEventListener('pointercancel', endGesture);
     marker.addEventListener('pointerleave', clearTimer);
     google.maps.event.addListener(marker, 'dragstart', clearTimer);
     // A touch pointer stays captured by the marker, so 'pointerleave' doesn't fire while the finger
