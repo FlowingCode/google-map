@@ -688,9 +688,14 @@ Polymer({
 
     // Duration in milliseconds to consider a press a "long press".
     const LONG_PRESS_DURATION = 800;
+    // Distance in pixels the pointer can move before the press is no longer a long press.
+    const LONG_PRESS_MOVE_TOLERANCE = 10;
 
     const marker = this.marker;
+    let startX, startY;
     marker.addEventListener('pointerdown', (domEvent) => {
+      startX = domEvent.clientX;
+      startY = domEvent.clientY;
       // A new gesture starts: a swallowed click of a previous touch-and-hold no longer applies.
       // The flag is cleared here, and not by the click handlers, so that all of them swallow the same click.
       this._suppressNextClick = false;
@@ -715,6 +720,15 @@ Polymer({
     marker.addEventListener('pointercancel', clearTimer);
     marker.addEventListener('pointerleave', clearTimer);
     google.maps.event.addListener(marker, 'dragstart', clearTimer);
+    // A touch pointer stays captured by the marker, so 'pointerleave' doesn't fire while the finger
+    // moves away (e.g. when panning the map); a movement threshold is used instead.
+    // Bounds can't be used either: the content of a marker with an icon has zero size.
+    marker.addEventListener('pointermove', (domEvent) => {
+      if (this._touchTimer &&
+          Math.hypot(domEvent.clientX - startX, domEvent.clientY - startY) > LONG_PRESS_MOVE_TOLERANCE) {
+        clearTimer();
+      }
+    });
   },
 
   /* Same API as google-map-marker, used by google-map and for marker clustering */
