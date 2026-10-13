@@ -62,6 +62,11 @@ For advanced markers:
 http://localhost:8000/demo/advanced-markers.html?api-key=YOUR_API_KEY
 http://localhost:8000/demo/advanced-markers-clustering.html?api-key=YOUR_API_KEY
 ```
+For markers clustering (optional `map-id` and `custom-renderer=1` query parameters):
+
+```
+http://localhost:8000/demo/markers-clustering.html?api-key=YOUR_API_KEY
+```
 
 ## Release notes
 
