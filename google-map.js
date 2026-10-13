@@ -5,6 +5,29 @@ import './google-map-marker.js';
 import '@flowingcode/google-apis/google-maps-api.js';
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 
+// Cluster renderer that always uses google.maps.Marker, for maps without a Map ID.
+// Same icon as the legacy branch of markerclusterer's DefaultRenderer (2.6.2).
+const LEGACY_CLUSTER_RENDERER = {
+  render({ count, position }, stats) {
+    const color = count > Math.max(10, stats.clusters.markers.mean) ? "#ff0000" : "#0000ff";
+    const svg = `<svg fill="${color}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="50" height="50">
+<circle cx="120" cy="120" opacity=".6" r="70" />
+<circle cx="120" cy="120" opacity=".3" r="90" />
+<circle cx="120" cy="120" opacity=".2" r="110" />
+<text x="50%" y="50%" style="fill:#fff" text-anchor="middle" font-size="50" dominant-baseline="middle" font-family="roboto,arial,sans-serif">${count}</text>
+</svg>`;
+    return new google.maps.Marker({
+      position,
+      zIndex: Number(google.maps.Marker.MAX_ZINDEX) + count,
+      title: `Cluster of ${count} markers`,
+      icon: {
+        url: `data:image/svg+xml;base64,${btoa(svg)}`,
+        anchor: new google.maps.Point(25, 25),
+      },
+    });
+  }
+};
+
 /* Copyright (c) 2015 Google Inc. All rights reserved. */
 /**
 The `google-map` element renders a Google Map.
@@ -970,8 +993,12 @@ Polymer({
       };
       if (typeof this.customRenderer === 'string') {
         options.renderer = eval(this.customRenderer);
+      } else if (!(this.mapId || (this.additionalMapOptions && this.additionalMapOptions.mapId))) {
+        // Without a Map ID, advanced markers can't be used, but the default renderer
+        // still draws cluster icons as advanced markers when the marker library is loaded.
+        options.renderer = LEGACY_CLUSTER_RENDERER;
       }
-      this.markerCluster = new MarkerClusterer(options); 
+      this.markerCluster = new MarkerClusterer(options);
     }
   },
 
